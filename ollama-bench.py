@@ -235,7 +235,7 @@ def merge_error_files(directory: str):
 def main():
     host = os.getenv('OLLAMA_HOST')
     if not host:
-        host = input("Enter Ollama host URL (e.g., http://147.185.40.120:20021): ")
+        host = input("Enter Ollama host URL (e.g., http://127.0.0.1:11434): ")
 
     parser = argparse.ArgumentParser(description="Run benchmarks on your Ollama models.")
     parser.add_argument("-v", "--verbose", action="store_true", help="Increase output verbosity")

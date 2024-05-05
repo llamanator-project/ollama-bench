@@ -2,11 +2,15 @@
 
 Ollama Bench is a benchmarking program that I (meaning me, ChatGPT and Claude) developed based on the [Ollama Python Library](https://github.com/ollama/ollama-python) to test the performance and capabilities of the Parallel requests and Multi Model capabilities released in [Ollama 0.1.33](https://github.com/ollama/ollama/releases/tag/v0.1.33).
 
+---
+
 ## Requirements
 
 - Mac/Linux
 - Python3
 - Ollama >=0.1.33
+
+---
 
 ## Usage
 
@@ -21,7 +25,9 @@ Ollama Bench is a benchmarking program that I (meaning me, ChatGPT and Claude) d
     - `Enter the timeout duration in seconds (after which a request will be marked as running for too long):` Choose a value in seconds for how long before a request is automatically stopped. This comes in handy as some models start looping and generating nonsense forever. The program will monitor how long the run takes and automatically kill the request after the defined time.
     - `Please confirm the details of the run by typing 'yes':` You will be prompted to confirm the details of the run by typing `yes`
 
-# Outputs
+---
+
+## Outputs
 
 - During the run, all successful requests and errors will be put into individual `.csv` files in the `./ollama-benchmark-results` dir under a dir called `{current_datetime}-benchmark` for each run.
 - At the end of the run, or if you hit `ctrl + c` one time, the results will be compiled into `benchmark_results.csv` and `error_log.csv`
@@ -32,7 +38,20 @@ Ollama Bench is a benchmarking program that I (meaning me, ChatGPT and Claude) d
     - `Averages:` Average tokens per second across all requests
     - `Model Usage Summary:` The number of times each model selected for this run was used
 
-# Issues and Improvements
+---
+
+## Ollama Setup
+
+In order to full test this, you will need Ollama 0.1.33 or newer and make sure you have added the following options on your appropriate OS:
+
+- `OLLAMA_NUM_PARALLEL=x`: This sets the number of parallel requests Ollama will accept. An error will be sent when you exceed the number set here.
+- `OLLAMA_MAX_LOADED_MODELS=x`: This set the number of models that Ollama will be allowed to load at one time. 
+
+You will need to set these and tune them to determine the best results for your particular system.
+
+---
+
+## Issues and Improvements
 
 There will likely be issues. I am not a developer and I fully leveraged ChatGPT and Claude to write this.
 
