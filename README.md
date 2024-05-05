@@ -10,7 +10,7 @@ Ollama Bench is a benchmarking program that I (meaning me, ChatGPT and Claude) d
 
 ## Usage
 
-1. Clone this repo: `git clone ####`
+1. Clone this repo: `git clone https://github.com/llamanator-project/ollama-bench.git`
 2. Add a bank of prompts as a `somefile.txt` format with each prompt on a new line separated by a comma. Refer to the files in the `./sample-prompts` dir for the format, or just use one of the samples for your run.
 3. Run `python3 ollama-bench.py -f ./your-question-file.txt` and you will be prompted for some input
 4. Fill in the inputs and confirm to start the run
