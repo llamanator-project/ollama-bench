@@ -36,11 +36,11 @@ def nanosec_to_sec(nanosec):
 
 model_usage = {}  # Model usage counter
 
-def run_benchmark(model_name: str, prompt: str, verbose: bool, directory: str, index: int, timeout: int):
+def run_benchmark(model_name: str, prompt: str, verbose: bool, directory: str, index: int, timeout: int, host: str):
     print(f"Request {index + 1}: Starting request for: '{prompt}' using model {model_name} at {datetime.now()}")
 
     try:
-        client = ollama.Client(host=os.getenv('OLLAMA_HOST', 'http://127.0.0.1:11434'))
+        client = ollama.Client(host=host)
         messages = [
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": prompt}
@@ -126,7 +126,7 @@ def write_to_csv(directory: str, data: dict, index: int, is_error: bool):
 
         writer.writerow(data)
 
-def merge_csv_files(directory: str):
+def merge_csv_files(directory: str, total_run_time: float):
     csv_files = [file for file in os.listdir(directory) if file.startswith('benchmark_results_') and file.endswith('.csv')]
     merged_csv_path = os.path.join(directory, 'benchmark_results.csv')
 
@@ -179,40 +179,19 @@ def merge_csv_files(directory: str):
     response_eval_avg = response_eval_sum / row_count if row_count > 0 else 0
     total_eval_avg = total_eval_sum / row_count if row_count > 0 else 0
 
-    # Write averages, highest, lowest, and total values to the CSV file
+    # Write averages, highest, lowest, total values, and total run time to the CSV file
     with open(merged_csv_path, 'a', newline='') as merged_file:
         writer = csv.writer(merged_file)
         writer.writerow([])
-        writer.writerow(['Averages:'])
-        writer.writerow(['', '', '', f"{prompt_eval_avg:.2f}", f"{response_eval_avg:.2f}", f"{total_eval_avg:.2f}", ''])
+        writer.writerow(['Averages:', '', '', f"{prompt_eval_avg:.2f}", f"{response_eval_avg:.2f}", f"{total_eval_avg:.2f}", ''])
         writer.writerow([])
-        writer.writerow(['Highest Tokens per Second:'])
-        writer.writerow(['', '', '', f"{prompt_eval_max:.2f}", f"{response_eval_max:.2f}", f"{total_eval_max:.2f}", ''])
+        writer.writerow(['Highest Tokens per Second:', '', '', f"{prompt_eval_max:.2f}", f"{response_eval_max:.2f}", f"{total_eval_max:.2f}", ''])
         writer.writerow([])
-        writer.writerow(['Lowest Tokens per Second:'])
-        writer.writerow(['', '', '', f"{prompt_eval_min:.2f}", f"{response_eval_min:.2f}", f"{total_eval_min:.2f}", ''])
+        writer.writerow(['Lowest Tokens per Second:', '', '', f"{prompt_eval_min:.2f}", f"{response_eval_min:.2f}", f"{total_eval_min:.2f}", ''])
         writer.writerow([])
-        writer.writerow(['Total Tokens Received in Response:'])
-        writer.writerow(['', '', '', '', '', '', eval_count_sum])
-
-    # Calculate averages
-    prompt_eval_avg = prompt_eval_sum / row_count if row_count > 0 else 0
-    response_eval_avg = response_eval_sum / row_count if row_count > 0 else 0
-    total_eval_avg = total_eval_sum / row_count if row_count > 0 else 0
-
-    # Write averages, highest, and lowest values to the CSV file
-    with open(merged_csv_path, 'a', newline='') as merged_file:
-        writer = csv.writer(merged_file)
+        writer.writerow(['Total Tokens Received in Response:', '', '', '', '', '', eval_count_sum])
         writer.writerow([])
-        writer.writerow(['Averages:'])
-        writer.writerow(['', '', '', f"{prompt_eval_avg:.2f}", f"{response_eval_avg:.2f}", f"{total_eval_avg:.2f}"])
-        writer.writerow([])
-        writer.writerow(['Highest Tokens per Second:'])
-        writer.writerow(['', '', '', f"{prompt_eval_max:.2f}", f"{response_eval_max:.2f}", f"{total_eval_max:.2f}"])
-        writer.writerow([])
-        writer.writerow(['Lowest Tokens per Second:'])
-        writer.writerow(['', '', '', f"{prompt_eval_min:.2f}", f"{response_eval_min:.2f}", f"{total_eval_min:.2f}"])
-
+        writer.writerow(['Total Run Time (seconds):', '', '', '', '', '', f"{total_run_time:.2f}"])
 
 def merge_error_files(directory: str):
     error_files = [file for file in os.listdir(directory) if file.startswith('error_') and file.endswith('.csv')]
@@ -259,7 +238,7 @@ def main():
     delay = float(input("How much time in seconds should wait between requests? "))
     timeout = int(input("Enter the timeout duration in seconds (after which a request will be marked as running for too long): "))
 
-    print (f"\nTarget Ollama Server: {host}")
+    print(f"\nTarget Ollama Server: {host}")
     print(f"You have selected the following models:")
     for model in selected_models:
         print(model)
@@ -276,6 +255,8 @@ def main():
     directory = f'./ollama-benchmark-results/{current_datetime}-benchmark'
     os.makedirs(directory, exist_ok=True)
 
+    start_time = time.time()
+
     threads = []
     try:
         prompt_index = 0
@@ -283,7 +264,7 @@ def main():
             current_model = selected_models[i % len(selected_models)]
             prompt = prompts[prompt_index]
             prompt_index = (prompt_index + 1) % len(prompts)
-            thread = threading.Thread(target=run_benchmark, args=(current_model, prompt, args.verbose, directory, i, timeout))
+            thread = threading.Thread(target=run_benchmark, args=(current_model, prompt, args.verbose, directory, i, timeout, host))
             thread.start()
             threads.append(thread)
             time.sleep(delay)
@@ -298,8 +279,13 @@ def main():
             thread.join()
         print("All threads finished.")
 
+    end_time = time.time()
+    total_run_time = end_time - start_time
+
+    print(f"\nTotal length of the run: {total_run_time:.2f} seconds")
+
     # Merge individual CSV files into a single file
-    merge_csv_files(directory)
+    merge_csv_files(directory, total_run_time)
 
     # Merge individual error files into a single file
     merge_error_files(directory)
