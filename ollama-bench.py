@@ -60,7 +60,7 @@ def run_benchmark(model_name: str, prompt: str, verbose: bool, directory: str, i
                     print(f"Received chunk: {message_content}")
 
             if not stats_collected and 'done' in chunk and chunk['done']:
-                model_response = OllamaResponse.parse_obj(chunk)
+                model_response = OllamaResponse.model_validate(chunk)
                 stats = get_stats_dict(model_response)
                 response_text += "\n\n" + "\n".join([f"{k}: {v}" for k, v in stats.items()])
                 if verbose:
